@@ -1,9 +1,18 @@
-from flask import Flask, render_template,redirect,url_for,request
+from flask import Flask, render_template,redirect,url_for,request,jsonify
 from yt_dlp import YoutubeDL
 from pathlib import Path
 
 app = Flask(__name__)
 
+def progress_hook(d):
+    if d['status'] == 'downloading':
+        progress_status['status'] = 'Downloading'
+        progress_status['percentage'] = d.get('_percent_str', '0%')
+    elif d['status'] == 'finished':
+        progress_status['status'] = 'Finished'
+        progress_status['percentage'] = '100%'
+
+progress_status = {'status': '','percentage': ''}
 @app.route('/', methods=['GET', 'POST'])
 def download_video():
     video_url = request.form.get('video_url')
@@ -11,6 +20,9 @@ def download_video():
         'format': 'bestvideo[height=1080]+bestaudio',
         'merge_output_format': 'mp4',
         'outtmpl': 'downloads/%(title)s.%(ext)s',  # Output folder and filename
+        'progress_hooks': [progress_hook],
+        'quiet': True,
+        'retries': 1,
     }
 
     if video_url and request.method == 'POST':
@@ -25,6 +37,9 @@ def download_video():
 
     return render_template('vid.html')
 
+@app.route('/progress')
+def get_progress():
+    return jsonify(progress_status)
+ 
 if __name__ == '__main__':
     app.run(debug=True)
-

@@ -4,13 +4,43 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Youtube Video Downloader</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script>
+        function pollProgress() {
+            fetch('/progress')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status) {
+                        document.getElementById('progress').textContent =
+                            `${data.status} (${data.percentage})`;
+                        if (data.status !== 'Finished') {
+                            setTimeout(pollProgress, 1000);
+                        }
+                    }
+                });
+        }
+        function onFormSubmit() {
+            setTimeout(pollProgress, 500);  // Start polling after submission
+        }
+    </script> 
 </head>
-<body>
-    <form action = "/" method = "post">
-        <h1> YOUTUBE VIDEO DOWNLOADER</h1>
-        <label for="video_url">Enter Youtube Video URL</label>
-        <input type = "text" id = "video_url" name = "video_url" placeholder = "Enter Youtube Video URL" required>
-        <button type="submit">Download</button>
-    </form>
-</body>
+    <body>
+        <form action = "/" method = "post" onsubmit="onFormSubmit()">
+            <div class ='title'><h1> YOUTUBE VIDEO DOWNLOADER</h1>
+            </div>
+            <div class ='input-container'>
+                <div class ='inputbox'>
+                    <label for="video_url">Enter Youtube Video URL</label>
+                    <input type = "text" id = "video_url" name = "video_url" placeholder = "Enter Youtube Video URL" required>
+                </div>
+                <div class ='buttons'>
+                    <button type="submit">Download</button>
+                </div>
+            </div>
+        </form>
+        <div id="progress" class="progress-text"></div>
+        {% if error %}
+            <div class="error">Error: {{ error }}</div>
+        {% endif %}
+    </body>
 </html>
